@@ -1,0 +1,41 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    height: 100%;
+}
+
+.container {
+    min-width: 100%;
+    min-height: 100%;
+    background-color: #0b0b29fc;
+}
+
+.container-cards {
+    display: flex;
+    flex-direction: row;
+}
+
+.card {
+    width: 280px;
+    height: 280px;
+    background-color: aliceblue;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 16px;
+}
+
+.add-note img {
+    width: 105px;
+    height: 105px;
+    object-fit: cover;
+}
+
+@media only screen and (max-width: 600px) {
+    .container-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+}
