@@ -1,17 +1,22 @@
 "use strict";
 const addNoteButton = document.getElementsByClassName('add-note')[0];
-function createModal() {
+const container = document.getElementsByClassName('container')[0];
+function createAndShowModal() {
+    if (container.getElementsByClassName('shadow')[0])
+        return;
+    const shadow = document.createElement('div');
+    shadow.classList.add('shadow');
     const modal = document.createElement('div');
     modal.classList.add('modal');
     const headerModal = document.createElement('div');
     headerModal.classList.add('header-modal');
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     title.innerText = 'Add a new note';
     headerModal.appendChild(title);
     const removeModalButton = document.createElement('div');
     removeModalButton.classList.add('remove-modal-button');
     removeModalButton.innerText = 'x';
-    removeModalButton.addEventListener('click', removeModal);
+    removeModalButton.addEventListener('click', () => removeModal(removeModalButton));
     headerModal.appendChild(removeModalButton);
     modal.appendChild(headerModal);
     const mainModal = document.createElement('div');
@@ -35,19 +40,20 @@ function createModal() {
     descriptionBlock.classList.add('text-block');
     descriptionBlock.innerText = 'Description';
     addDescription.appendChild(descriptionBlock);
-    const inputDescription = document.createElement('input');
-    inputDescription.classList.add('input-description');
-    inputDescription.setAttribute('type', 'text');
-    addDescription.appendChild(inputDescription);
+    const textareaDescription = document.createElement('textarea');
+    textareaDescription.classList.add('textarea-description');
+    addDescription.appendChild(textareaDescription);
     mainModal.appendChild(addDescription);
+    const addNoteButton = document.createElement('div');
+    addNoteButton.classList.add('add-note-button');
+    addNoteButton.innerText = 'Add Note';
+    mainModal.appendChild(addNoteButton);
     modal.appendChild(mainModal);
-    return modal;
+    shadow.appendChild(modal);
+    container.appendChild(shadow);
 }
-function showModalAndCreateNote() {
-    const modal = createModal();
-    console.log(modal);
-}
-addNoteButton.addEventListener('click', showModalAndCreateNote);
-function removeModal() {
-    //
+addNoteButton.addEventListener('click', createAndShowModal);
+function removeModal(x) {
+    if (x.parentNode?.parentNode?.parentNode)
+        container.removeChild(x.parentNode.parentNode.parentNode);
 }

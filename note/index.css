@@ -44,3 +44,93 @@ body, html {
         align-items: center;
     }
 }
+
+.modal {
+    background-color: white;
+    border-radius: 8px;
+    width: 450px;
+    height: 600px;
+    padding: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.header-modal {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px;
+}
+
+.remove-modal-button {
+    height: 100%;
+    font-size: 32px;
+}
+
+.remove-modal-button:hover {
+    color: rgb(67, 67, 67);
+}
+
+.remove-modal-button, .modal hr {
+    color: rgb(104, 104, 104);
+}
+
+.text-block {
+    font-size: 24px;
+    color: #252525;
+}
+
+.input-title {
+    height: 30px;
+    width: 440px;
+}
+
+.textarea-description {
+    height: 160px;
+    width: 440px;
+    resize: none;
+}
+
+.add-note-button {
+    width: 450px;
+    height: 60px;
+    border-radius: 4px;
+    background-color: #0b0b29fc;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+}
+
+.add-note-button:hover {
+    background-color: #090932fc;
+    color: rgb(222, 222, 222);
+}
+
+.shadow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(128, 128, 128, 0.6);
+    width: 100%;
+    height: 100vh;
+    z-index: 2;
+}
+
+@media only screen and (max-width: 500px) {
+    .modal {
+        width: 300px;
+    }
+
+    .add-note-button {
+        width: 300px;
+    }
+
+    .input-title, .textarea-description {
+        width: 290px;
+    }
+}
