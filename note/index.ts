@@ -1,6 +1,14 @@
 const addNoteButton = document.getElementsByClassName('add-note')[0];
 const container = document.getElementsByClassName('container')[0];
 
+function getTargetElement<T extends HTMLImageElement | HTMLParagraphElement | HTMLTextAreaElement>(
+  className: string,
+  tagsList: HTMLCollectionOf<T>
+): T | undefined {
+  const searchedElement = [...tagsList].find((el) => [...el.classList].includes(className));
+  return searchedElement;
+}
+
 function createAndShowModal() {
   if (container.getElementsByClassName('shadow')[0]) return;
 
@@ -63,6 +71,7 @@ function createAndShowModal() {
   const addNoteButton = document.createElement('div');
   addNoteButton.classList.add('add-note-button');
   addNoteButton.innerText = 'Add Note';
+  addNoteButton.addEventListener('click', addCardInfoToLocalStorage);
   mainModal.appendChild(addNoteButton);
 
   modal.appendChild(mainModal);
@@ -75,4 +84,33 @@ addNoteButton.addEventListener('click', createAndShowModal);
 
 function removeModal(x: HTMLDivElement) {
   if (x.parentNode?.parentNode?.parentNode) container.removeChild(x.parentNode.parentNode.parentNode);
+}
+
+// localStorage.setItem('titles', JSON.stringify([]));
+// localStorage.setItem('descriptions', JSON.stringify([]));
+
+function addCardInfoToLocalStorage() {
+  const title = getTargetElement('input-title', document.getElementsByTagName('input'));
+  const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
+
+  const titlesJSON = localStorage.getItem('titles');
+  const selectedTitles = JSON.parse(titlesJSON ?? '') as string[];
+  if (title && !selectedTitles.includes(title?.value.toString())) selectedTitles.push(title?.value.toString());
+  localStorage.setItem('titles', JSON.stringify(selectedTitles));
+
+  const descriptionsJSON = localStorage.getItem('descriptions');
+  const selectedDescriptions = JSON.parse(descriptionsJSON ?? '') as string[];
+
+  if (description && !selectedDescriptions.includes(description?.value.toString()))
+    selectedDescriptions.push(description?.value.toString());
+  localStorage.setItem('descriptions', JSON.stringify(selectedDescriptions));
+
+  const removeModalButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
+  if (removeModalButton) removeModal(removeModalButton);
+
+  addCards(selectedTitles, selectedDescriptions);
+}
+
+function addCards(titles: string[], descriptions: string[]) {
+  for (let i = 0; i < titles.length; i++) {}
 }
