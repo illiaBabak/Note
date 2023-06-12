@@ -1,6 +1,7 @@
 "use strict";
 const addNoteButton = document.getElementsByClassName('add-note')[0];
 const container = document.getElementsByClassName('container')[0];
+const containerCards = document.getElementsByClassName('container-cards')[0];
 function getTargetElement(className, tagsList) {
     const searchedElement = [...tagsList].find((el) => [...el.classList].includes(className));
     return searchedElement;
@@ -82,6 +83,30 @@ function addCardInfoToLocalStorage() {
         removeModal(removeModalButton);
     addCards(selectedTitles, selectedDescriptions);
 }
+addCardInfoToLocalStorage();
+function createCard() {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    const titleCard = document.createElement('h3');
+    titleCard.classList.add('title-card');
+    card.appendChild(titleCard);
+    const descriptionCard = document.createElement('p');
+    descriptionCard.classList.add('description-card');
+    card.appendChild(descriptionCard);
+    return card;
+}
 function addCards(titles, descriptions) {
-    for (let i = 0; i < titles.length; i++) { }
+    for (let i = containerCards.children.length - 1; i > 0; i--) {
+        containerCards.removeChild(containerCards.children[i]);
+    }
+    for (let i = 0; i < titles.length; i++) {
+        const card = createCard();
+        const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
+        const description = getTargetElement('description-card', card.getElementsByTagName('p'));
+        if (title)
+            title.innerText = titles[i];
+        if (description)
+            description.innerText = descriptions[i];
+        containerCards.appendChild(card);
+    }
 }
