@@ -33,6 +33,11 @@ body, html {
     object-fit: cover;
 }
 
+.card:hover {
+    transform: scale(1.03);
+    transition: 0.45s;
+}
+
 @media only screen and (max-width: 600px) {
     .container-cards {
         flex-direction: column;
