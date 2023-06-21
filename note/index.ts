@@ -2,6 +2,21 @@ const addNoteButton = document.getElementsByClassName('add-note')[0];
 const container = document.getElementsByClassName('container')[0];
 const containerCards = document.getElementsByClassName('container-cards')[0];
 
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 function getTargetElement<T extends HTMLImageElement | HTMLParagraphElement | HTMLTextAreaElement>(
   className: string,
   tagsList: HTMLCollectionOf<T>
@@ -87,9 +102,6 @@ function removeModal(x: HTMLDivElement) {
   if (x.parentNode?.parentNode?.parentNode) container.removeChild(x.parentNode.parentNode.parentNode);
 }
 
-// localStorage.setItem('titles', JSON.stringify([]));
-// localStorage.setItem('descriptions', JSON.stringify([]));
-
 function addCardInfoToLocalStorage() {
   const title = getTargetElement('input-title', document.getElementsByTagName('input'));
   const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
@@ -115,17 +127,65 @@ addCardInfoToLocalStorage();
 
 function createCard() {
   const card = document.createElement('div');
-  card.classList.add('card');
+  card.classList.add('card', 'note');
+
+  const mainCard = document.createElement('div');
+  mainCard.classList.add('main-card');
 
   const titleCard = document.createElement('h3');
   titleCard.classList.add('title-card');
-  card.appendChild(titleCard);
+  mainCard.appendChild(titleCard);
 
   const descriptionCard = document.createElement('p');
   descriptionCard.classList.add('description-card');
-  card.appendChild(descriptionCard);
+  mainCard.appendChild(descriptionCard);
+
+  const footerCard = document.createElement('div');
+  footerCard.classList.add('footer-card');
+
+  const date = document.createElement('p');
+  date.classList.add('date');
+  footerCard.appendChild(date);
+
+  const editButton = document.createElement('img');
+  editButton.classList.add('edit-note-button');
+  editButton.setAttribute('src', 'content/edit.png');
+  footerCard.appendChild(editButton);
+
+  const deleteButton = document.createElement('img');
+  deleteButton.classList.add('delete-note-button');
+  deleteButton.setAttribute('src', 'content/delete.png');
+  deleteButton.addEventListener('click', () => removeCard(deleteButton));
+  footerCard.appendChild(deleteButton);
+
+  card.appendChild(mainCard);
+  card.appendChild(footerCard);
 
   return card;
+}
+
+function removeCard(x: HTMLDivElement) {
+  if (x.parentNode?.parentNode) {
+    containerCards.removeChild(x.parentNode.parentNode);
+
+    const title = getTargetElement('title-card', (<Element>x.parentNode.parentNode).getElementsByTagName('h3'));
+    const description = getTargetElement(
+      'description-card',
+      (<Element>x.parentNode.parentNode).getElementsByTagName('p')
+    );
+
+    const titlesJSON = localStorage.getItem('titles');
+    const selectedTitles = JSON.parse(titlesJSON ?? '') as string[];
+
+    localStorage.setItem('titles', JSON.stringify(selectedTitles.filter((el) => el !== title?.innerText)));
+
+    const descriptionsJSON = localStorage.getItem('descriptions');
+    const selectedDescriptions = JSON.parse(descriptionsJSON ?? '') as string[];
+    localStorage.setItem(
+      'descriptions',
+      JSON.stringify(selectedDescriptions.filter((el) => el !== description?.innerText))
+    );
+  }
 }
 
 function addCards(titles: string[], descriptions: string[]) {
@@ -137,9 +197,16 @@ function addCards(titles: string[], descriptions: string[]) {
     const card = createCard();
     const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
     const description = getTargetElement('description-card', card.getElementsByTagName('p'));
+    const date = getTargetElement('date', card.getElementsByTagName('p'));
 
     if (title) title.innerText = titles[i];
     if (description) description.innerText = descriptions[i];
+    if (date) {
+      const dateText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const [_, day, year] = dateText.split(' ');
+      const formattedDate = `${months[new Date().getMonth()]} ${day} ${year}`;
+      date.innerText = formattedDate;
+    }
 
     containerCards.appendChild(card);
   }
