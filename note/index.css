@@ -43,7 +43,7 @@ body, html {
     border-radius: 50%;
     border: 6px solid black;
     position: absolute;
-    z-index: 5;
+    z-index: 1;
     left: calc(100% - 170px);
     top: calc(100% - 170px);
 }
@@ -70,6 +70,7 @@ body, html {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+    z-index: 4;
 }
 
 .header-modal {
@@ -194,4 +195,8 @@ body, html {
     width: 40px;
     height: 40px;
     object-fit: cover;
+}
+
+.add-note:hover, .delete-note-button:hover, .edit-note-button:hover, .add-note-button:hover, .remove-modal-button:hover, .input-title:hover, .textarea-description:hover, .overlay:hover {
+    cursor: grab;
 }

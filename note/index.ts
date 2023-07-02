@@ -30,6 +30,14 @@ function createAndShowModal() {
   const modal = document.createElement('div');
   modal.classList.add('modal');
 
+  modal.addEventListener('mouseenter', () => {
+    overlay.removeEventListener('click', removeModal);
+  });
+
+  modal.addEventListener('mouseleave', () => {
+    overlay.addEventListener('click', removeModal);
+  });
+
   const headerModal = document.createElement('div');
   headerModal.classList.add('header-modal');
 
