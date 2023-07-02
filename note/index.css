@@ -8,7 +8,7 @@ body, html {
 .container {
     min-width: 100%;
     min-height: 100%;
-    background-color: #0b0b29fc;
+    background-color: #171743f3;
 }
 
 .container-cards {
@@ -30,14 +30,22 @@ body, html {
 }
 
 .add-note img {
-    width: 105px;
-    height: 105px;
+    width: 65px;
+    height: 65px;
     object-fit: cover;
 }
 
 .add-note {
     justify-content: center;
     align-items: center;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 6px solid black;
+    position: absolute;
+    z-index: 5;
+    left: calc(100% - 170px);
+    top: calc(100% - 170px);
 }
 
 .card:hover {
@@ -57,7 +65,7 @@ body, html {
     border-radius: 8px;
     width: 450px;
     height: 600px;
-    padding: 8px;
+    padding: 16px;
     position: absolute;
     left: 50%;
     top: 50%;
@@ -69,6 +77,8 @@ body, html {
     flex-direction: row;
     justify-content: space-between;
     padding: 8px;
+    border-bottom: 1px solid gray;
+    font-size: 18px;
 }
 
 .remove-modal-button {
@@ -100,6 +110,14 @@ body, html {
     resize: none;
 }
 
+.input-title, .textarea-description {
+    border: 1px solid gray;
+}
+
+.input-title:focus, .textarea-description:focus {
+    background-color: rgba(215, 231, 237, 0.446);
+}
+
 .add-note-button {
     width: 450px;
     height: 60px;
@@ -109,7 +127,7 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 40px;
+    margin-top: 95px;
 }
 
 .add-note-button:hover {
@@ -117,12 +135,12 @@ body, html {
     color: rgb(222, 222, 222);
 }
 
-.shadow {
+.overlay {
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(103, 105, 112, 0.6);
+    background: rgba(39, 39, 46, 0.963);
     width: 100%;
     height: 100vh;
     z-index: 2;
@@ -167,7 +185,7 @@ body, html {
 .footer-card {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     width: 100%;
 }

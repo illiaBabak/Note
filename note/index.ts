@@ -2,34 +2,30 @@ const addNoteButton = document.getElementsByClassName('add-note')[0];
 const container = document.getElementsByClassName('container')[0];
 const containerCards = document.getElementsByClassName('container-cards')[0];
 
-const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-function getTargetElement<T extends HTMLImageElement | HTMLParagraphElement | HTMLTextAreaElement>(
-  className: string,
-  tagsList: HTMLCollectionOf<T>
-): T | undefined {
+function getTargetElement<T extends HTMLElement>(className: string, tagsList: HTMLCollectionOf<T>): T | undefined {
   const searchedElement = [...tagsList].find((el) => [...el.classList].includes(className));
   return searchedElement;
 }
 
-function createAndShowModal() {
-  if (container.getElementsByClassName('shadow')[0]) return;
+function generateKey(length: number): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const timestamp = Date.now().toString();
+  const timestampLength = timestamp.length;
+  let randomString = '';
 
-  const shadow = document.createElement('div');
-  shadow.classList.add('shadow');
+  for (let i = 0; i < length - timestampLength; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    randomString += characters.charAt(randomIndex);
+  }
+
+  return randomString + timestamp;
+}
+
+function createAndShowModal() {
+  if (container.getElementsByClassName('overlay')[0]) return;
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('overlay');
 
   const modal = document.createElement('div');
   modal.classList.add('modal');
@@ -38,22 +34,19 @@ function createAndShowModal() {
   headerModal.classList.add('header-modal');
 
   const title = document.createElement('h2');
-  title.innerText = 'Add a new note';
+  title.innerText = 'Add new note';
   headerModal.appendChild(title);
 
-  const removeModalButton = document.createElement('div');
-  removeModalButton.classList.add('remove-modal-button');
-  removeModalButton.innerText = 'x';
-  removeModalButton.addEventListener('click', () => removeModal(removeModalButton));
-  headerModal.appendChild(removeModalButton);
+  const removeButton = document.createElement('div');
+  removeButton.classList.add('remove-modal-button');
+  removeButton.innerText = 'x';
+  removeButton.addEventListener('click', removeModal);
+  headerModal.appendChild(removeButton);
 
   modal.appendChild(headerModal);
 
-  const mainModal = document.createElement('div');
-  mainModal.classList.add('main-modal');
-
-  const hr = document.createElement('hr');
-  mainModal.appendChild(hr);
+  const modalBody = document.createElement('div');
+  modalBody.classList.add('main-modal');
 
   const addTitleDiv = document.createElement('div');
   addTitleDiv.classList.add('main-modal-block');
@@ -68,7 +61,7 @@ function createAndShowModal() {
   inputTitle.setAttribute('type', 'text');
   addTitleDiv.appendChild(inputTitle);
 
-  mainModal.appendChild(addTitleDiv);
+  modalBody.appendChild(addTitleDiv);
 
   const addDescription = document.createElement('div');
   addDescription.classList.add('main-modal-block');
@@ -82,29 +75,35 @@ function createAndShowModal() {
   textareaDescription.classList.add('textarea-description');
   addDescription.appendChild(textareaDescription);
 
-  mainModal.appendChild(addDescription);
+  modalBody.appendChild(addDescription);
 
   const addNoteButton = document.createElement('div');
   addNoteButton.classList.add('add-note-button');
   addNoteButton.innerText = 'Add Note';
   addNoteButton.addEventListener('click', addCardInfoToLocalStorage);
-  mainModal.appendChild(addNoteButton);
+  modalBody.appendChild(addNoteButton);
 
-  modal.appendChild(mainModal);
+  modal.appendChild(modalBody);
 
-  shadow.appendChild(modal);
-  container.appendChild(shadow);
+  overlay.appendChild(modal);
+  container.appendChild(overlay);
 }
 
 addNoteButton.addEventListener('click', createAndShowModal);
 
-function removeModal(x: HTMLDivElement) {
-  if (x.parentNode?.parentNode?.parentNode) container.removeChild(x.parentNode.parentNode.parentNode);
+function removeModal() {
+  const overlay = document.getElementsByClassName('overlay')[0];
+  if (overlay) container.removeChild(overlay);
 }
 
 function addCardInfoToLocalStorage() {
   const title = getTargetElement('input-title', document.getElementsByTagName('input'));
   const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
+
+  // const newNote = { title, description, key: generateKey(16) };
+  // const notes = JSON.parse(localStorage.getItem('notes') ?? '') as string[] as Note[];
+  // notes.push(newNote);
+  // localStorage.setItem('notes', JSON.stringify(notes));
 
   const titlesJSON = localStorage.getItem('titles');
   const selectedTitles = JSON.parse(titlesJSON ?? '') as string[];
@@ -118,8 +117,8 @@ function addCardInfoToLocalStorage() {
     selectedDescriptions.push(description?.value.toString());
   localStorage.setItem('descriptions', JSON.stringify(selectedDescriptions));
 
-  const removeModalButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
-  if (removeModalButton) removeModal(removeModalButton);
+  const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
+  if (removeButton) removeModal();
 
   addCards(selectedTitles, selectedDescriptions);
 }
@@ -150,6 +149,7 @@ function createCard() {
   const editButton = document.createElement('img');
   editButton.classList.add('edit-note-button');
   editButton.setAttribute('src', 'content/edit.png');
+  editButton.addEventListener('click', () => editCard(editButton));
   footerCard.appendChild(editButton);
 
   const deleteButton = document.createElement('img');
@@ -167,6 +167,7 @@ function createCard() {
 function removeCard(x: HTMLDivElement) {
   if (x.parentNode?.parentNode) {
     containerCards.removeChild(x.parentNode.parentNode);
+    const test = x.parentNode.parentNode;
 
     const title = getTargetElement('title-card', (<Element>x.parentNode.parentNode).getElementsByTagName('h3'));
     const description = getTargetElement(
@@ -188,6 +189,19 @@ function removeCard(x: HTMLDivElement) {
   }
 }
 
+function editCard(editButton: HTMLDivElement) {
+  if (editButton.parentNode?.parentNode) {
+    const title = getTargetElement(
+      'title-card',
+      (<Element>editButton.parentNode.parentNode).getElementsByTagName('h3')
+    );
+    const description = getTargetElement(
+      'description-card',
+      (<Element>editButton.parentNode.parentNode).getElementsByTagName('p')
+    );
+  }
+}
+
 function addCards(titles: string[], descriptions: string[]) {
   for (let i = containerCards.children.length - 1; i > 0; i--) {
     containerCards.removeChild(containerCards.children[i]);
@@ -195,6 +209,8 @@ function addCards(titles: string[], descriptions: string[]) {
 
   for (let i = 0; i < titles.length; i++) {
     const card = createCard();
+    card.setAttribute('data-test', '1234');
+    const att = card.getAttribute('data-test');
     const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
     const description = getTargetElement('description-card', card.getElementsByTagName('p'));
     const date = getTargetElement('date', card.getElementsByTagName('p'));
@@ -203,9 +219,7 @@ function addCards(titles: string[], descriptions: string[]) {
     if (description) description.innerText = descriptions[i];
     if (date) {
       const dateText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      const [_, day, year] = dateText.split(' ');
-      const formattedDate = `${months[new Date().getMonth()]} ${day} ${year}`;
-      date.innerText = formattedDate;
+      date.innerText = dateText;
     }
 
     containerCards.appendChild(card);
