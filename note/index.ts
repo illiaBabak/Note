@@ -27,7 +27,7 @@ function generateKey(length: number): string {
   return randomString + timestamp;
 }
 
-function createAndShowModal() {
+function createAndShowModal(titleModal: string, titleResButton: string, editButton?: HTMLDivElement) {
   if (container.getElementsByClassName('overlay')[0]) return;
 
   const overlay = document.createElement('div');
@@ -48,7 +48,7 @@ function createAndShowModal() {
   headerModal.classList.add('header-modal');
 
   const title = document.createElement('h2');
-  title.innerText = 'Add new note';
+  title.innerText = titleModal;
   headerModal.appendChild(title);
 
   const removeButton = document.createElement('div');
@@ -72,6 +72,11 @@ function createAndShowModal() {
 
   const inputTitle = document.createElement('input');
   inputTitle.classList.add('input-title');
+  if (editButton?.parentNode?.parentNode && editButton?.parentNode.parentNode instanceof Element) {
+    const title = getTargetElement('title-card', editButton?.parentNode?.parentNode.getElementsByTagName('h3'));
+    if (title) inputTitle.value = title.innerText;
+  }
+
   inputTitle.setAttribute('type', 'text');
   addTitleDiv.appendChild(inputTitle);
 
@@ -87,14 +92,23 @@ function createAndShowModal() {
 
   const textareaDescription = document.createElement('textarea');
   textareaDescription.classList.add('textarea-description');
+  if (editButton?.parentNode?.parentNode && editButton?.parentNode.parentNode instanceof Element) {
+    const description = getTargetElement(
+      'description-card',
+      editButton?.parentNode?.parentNode.getElementsByTagName('p')
+    );
+    if (description) textareaDescription.value = description.innerText;
+  }
   addDescription.appendChild(textareaDescription);
 
   modalBody.appendChild(addDescription);
 
   const addNoteButton = document.createElement('div');
   addNoteButton.classList.add('add-note-button');
-  addNoteButton.innerText = 'Add Note';
-  addNoteButton.addEventListener('click', addCardInfoToLocalStorage);
+  addNoteButton.innerText = titleResButton;
+  if (titleResButton === 'Add note') addNoteButton.addEventListener('click', addCardInfoToLocalStorage);
+  if (titleResButton === 'Edit' && editButton) addNoteButton.addEventListener('click', () => editCard(editButton));
+
   modalBody.appendChild(addNoteButton);
 
   modal.appendChild(modalBody);
@@ -103,7 +117,7 @@ function createAndShowModal() {
   container.appendChild(overlay);
 }
 
-addNoteButton.addEventListener('click', createAndShowModal);
+addNoteButton.addEventListener('click', () => createAndShowModal('Add new note', 'Add note'));
 
 function removeModal() {
   const overlay = document.getElementsByClassName('overlay')[0];
@@ -154,7 +168,7 @@ function createCard() {
   const editButton = document.createElement('img');
   editButton.classList.add('edit-note-button');
   editButton.setAttribute('src', 'content/edit.png');
-  editButton.addEventListener('click', () => editCard(editButton));
+  editButton.addEventListener('click', () => createAndShowModal('Edit note', 'Edit', editButton));
   footerCard.appendChild(editButton);
 
   const deleteButton = document.createElement('img');
@@ -192,6 +206,25 @@ function removeCard(x: HTMLDivElement) {
 
 function editCard(editButton: HTMLDivElement) {
   if (editButton.parentNode?.parentNode) {
+    if (editButton.parentNode.parentNode instanceof Element) {
+      const title = getTargetElement('input-title', document.getElementsByTagName('input'));
+      const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
+      const attKey = editButton.parentNode.parentNode.getAttribute('data-key');
+      const notes = JSON.parse(localStorage.getItem('notes') ?? '') as Note[];
+
+      for (let i = 0; i < notes.length; i++) {
+        if (notes[i].key === attKey && notes[i].title && notes[i].description && title?.value && description?.value) {
+          notes[i].title = title?.value;
+          notes[i].description = description?.value;
+          break;
+        }
+      }
+      localStorage.setItem('notes', JSON.stringify(notes));
+      addCards(notes);
+
+      const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
+      if (removeButton) removeModal();
+    }
   }
 }
 
