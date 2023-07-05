@@ -82,24 +82,16 @@ function removeModal() {
 function addCardInfoToLocalStorage() {
     const title = getTargetElement('input-title', document.getElementsByTagName('input'));
     const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
-    // const newNote = { title, description, key: generateKey(16) };
-    // const notes = JSON.parse(localStorage.getItem('notes') ?? '') as string[] as Note[];
-    // notes.push(newNote);
-    // localStorage.setItem('notes', JSON.stringify(notes));
-    const titlesJSON = localStorage.getItem('titles');
-    const selectedTitles = JSON.parse(titlesJSON ?? '');
-    if (title && !selectedTitles.includes(title?.value.toString()))
-        selectedTitles.push(title?.value.toString());
-    localStorage.setItem('titles', JSON.stringify(selectedTitles));
-    const descriptionsJSON = localStorage.getItem('descriptions');
-    const selectedDescriptions = JSON.parse(descriptionsJSON ?? '');
-    if (description && !selectedDescriptions.includes(description?.value.toString()))
-        selectedDescriptions.push(description?.value.toString());
-    localStorage.setItem('descriptions', JSON.stringify(selectedDescriptions));
+    const notes = JSON.parse(localStorage.getItem('notes') ?? '');
+    if (title?.value && description?.value) {
+        const newNote = { title: title?.value, description: description?.value, key: generateKey(16) };
+        notes.push(newNote);
+    }
+    localStorage.setItem('notes', JSON.stringify(notes));
+    addCards(notes);
     const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
     if (removeButton)
         removeModal();
-    addCards(selectedTitles, selectedDescriptions);
 }
 addCardInfoToLocalStorage();
 function createCard() {
@@ -135,38 +127,38 @@ function createCard() {
 function removeCard(x) {
     if (x.parentNode?.parentNode) {
         containerCards.removeChild(x.parentNode.parentNode);
-        const test = x.parentNode.parentNode;
-        const title = getTargetElement('title-card', x.parentNode.parentNode.getElementsByTagName('h3'));
-        const description = getTargetElement('description-card', x.parentNode.parentNode.getElementsByTagName('p'));
-        const titlesJSON = localStorage.getItem('titles');
-        const selectedTitles = JSON.parse(titlesJSON ?? '');
-        localStorage.setItem('titles', JSON.stringify(selectedTitles.filter((el) => el !== title?.innerText)));
-        const descriptionsJSON = localStorage.getItem('descriptions');
-        const selectedDescriptions = JSON.parse(descriptionsJSON ?? '');
-        localStorage.setItem('descriptions', JSON.stringify(selectedDescriptions.filter((el) => el !== description?.innerText)));
+        if (x.parentNode.parentNode instanceof Element) {
+            const attKey = x.parentNode.parentNode.getAttribute('data-key');
+            const notes = JSON.parse(localStorage.getItem('notes') ?? '');
+            for (let i = 0; i < notes.length; i++) {
+                if (notes[i].key === attKey) {
+                    notes.splice(i, 1);
+                    break;
+                }
+            }
+            localStorage.setItem('notes', JSON.stringify(notes));
+            addCards(notes);
+        }
     }
 }
 function editCard(editButton) {
     if (editButton.parentNode?.parentNode) {
-        const title = getTargetElement('title-card', editButton.parentNode.parentNode.getElementsByTagName('h3'));
-        const description = getTargetElement('description-card', editButton.parentNode.parentNode.getElementsByTagName('p'));
     }
 }
-function addCards(titles, descriptions) {
+function addCards(notes) {
     for (let i = containerCards.children.length - 1; i > 0; i--) {
         containerCards.removeChild(containerCards.children[i]);
     }
-    for (let i = 0; i < titles.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
         const card = createCard();
-        card.setAttribute('data-test', '1234');
-        const att = card.getAttribute('data-test');
+        card.setAttribute('data-key', notes[i].key);
         const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
         const description = getTargetElement('description-card', card.getElementsByTagName('p'));
         const date = getTargetElement('date', card.getElementsByTagName('p'));
         if (title)
-            title.innerText = titles[i];
+            title.innerText = notes[i].title;
         if (description)
-            description.innerText = descriptions[i];
+            description.innerText = notes[i].description;
         if (date) {
             const dateText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             date.innerText = dateText;

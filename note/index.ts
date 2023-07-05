@@ -2,6 +2,12 @@ const addNoteButton = document.getElementsByClassName('add-note')[0];
 const container = document.getElementsByClassName('container')[0];
 const containerCards = document.getElementsByClassName('container-cards')[0];
 
+type Note = {
+  title: string;
+  description: string;
+  key: string;
+};
+
 function getTargetElement<T extends HTMLElement>(className: string, tagsList: HTMLCollectionOf<T>): T | undefined {
   const searchedElement = [...tagsList].find((el) => [...el.classList].includes(className));
   return searchedElement;
@@ -108,27 +114,18 @@ function addCardInfoToLocalStorage() {
   const title = getTargetElement('input-title', document.getElementsByTagName('input'));
   const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
 
-  // const newNote = { title, description, key: generateKey(16) };
-  // const notes = JSON.parse(localStorage.getItem('notes') ?? '') as string[] as Note[];
-  // notes.push(newNote);
-  // localStorage.setItem('notes', JSON.stringify(notes));
+  const notes = JSON.parse(localStorage.getItem('notes') ?? '') as Note[];
 
-  const titlesJSON = localStorage.getItem('titles');
-  const selectedTitles = JSON.parse(titlesJSON ?? '') as string[];
-  if (title && !selectedTitles.includes(title?.value.toString())) selectedTitles.push(title?.value.toString());
-  localStorage.setItem('titles', JSON.stringify(selectedTitles));
+  if (title?.value && description?.value) {
+    const newNote: Note = { title: title?.value, description: description?.value, key: generateKey(16) };
+    notes.push(newNote);
+  }
 
-  const descriptionsJSON = localStorage.getItem('descriptions');
-  const selectedDescriptions = JSON.parse(descriptionsJSON ?? '') as string[];
-
-  if (description && !selectedDescriptions.includes(description?.value.toString()))
-    selectedDescriptions.push(description?.value.toString());
-  localStorage.setItem('descriptions', JSON.stringify(selectedDescriptions));
+  localStorage.setItem('notes', JSON.stringify(notes));
+  addCards(notes);
 
   const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
   if (removeButton) removeModal();
-
-  addCards(selectedTitles, selectedDescriptions);
 }
 addCardInfoToLocalStorage();
 
@@ -175,56 +172,43 @@ function createCard() {
 function removeCard(x: HTMLDivElement) {
   if (x.parentNode?.parentNode) {
     containerCards.removeChild(x.parentNode.parentNode);
-    const test = x.parentNode.parentNode;
 
-    const title = getTargetElement('title-card', (<Element>x.parentNode.parentNode).getElementsByTagName('h3'));
-    const description = getTargetElement(
-      'description-card',
-      (<Element>x.parentNode.parentNode).getElementsByTagName('p')
-    );
+    if (x.parentNode.parentNode instanceof Element) {
+      const attKey = x.parentNode.parentNode.getAttribute('data-key');
+      const notes = JSON.parse(localStorage.getItem('notes') ?? '') as Note[];
 
-    const titlesJSON = localStorage.getItem('titles');
-    const selectedTitles = JSON.parse(titlesJSON ?? '') as string[];
+      for (let i = 0; i < notes.length; i++) {
+        if (notes[i].key === attKey) {
+          notes.splice(i, 1);
+          break;
+        }
+      }
 
-    localStorage.setItem('titles', JSON.stringify(selectedTitles.filter((el) => el !== title?.innerText)));
-
-    const descriptionsJSON = localStorage.getItem('descriptions');
-    const selectedDescriptions = JSON.parse(descriptionsJSON ?? '') as string[];
-    localStorage.setItem(
-      'descriptions',
-      JSON.stringify(selectedDescriptions.filter((el) => el !== description?.innerText))
-    );
+      localStorage.setItem('notes', JSON.stringify(notes));
+      addCards(notes);
+    }
   }
 }
 
 function editCard(editButton: HTMLDivElement) {
   if (editButton.parentNode?.parentNode) {
-    const title = getTargetElement(
-      'title-card',
-      (<Element>editButton.parentNode.parentNode).getElementsByTagName('h3')
-    );
-    const description = getTargetElement(
-      'description-card',
-      (<Element>editButton.parentNode.parentNode).getElementsByTagName('p')
-    );
   }
 }
 
-function addCards(titles: string[], descriptions: string[]) {
+function addCards(notes: Note[]) {
   for (let i = containerCards.children.length - 1; i > 0; i--) {
     containerCards.removeChild(containerCards.children[i]);
   }
 
-  for (let i = 0; i < titles.length; i++) {
+  for (let i = 0; i < notes.length; i++) {
     const card = createCard();
-    card.setAttribute('data-test', '1234');
-    const att = card.getAttribute('data-test');
+    card.setAttribute('data-key', notes[i].key);
     const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
     const description = getTargetElement('description-card', card.getElementsByTagName('p'));
     const date = getTargetElement('date', card.getElementsByTagName('p'));
 
-    if (title) title.innerText = titles[i];
-    if (description) description.innerText = descriptions[i];
+    if (title) title.innerText = notes[i].title;
+    if (description) description.innerText = notes[i].description;
     if (date) {
       const dateText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       date.innerText = dateText;
