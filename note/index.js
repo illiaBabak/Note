@@ -17,19 +17,29 @@ function generateKey(length) {
     }
     return randomString + timestamp;
 }
-function createAndShowModal(titleModal, titleResButton, editButton) {
+function isPossibleNote(data) {
+    return !!data && typeof data === 'object' && 'title' in data && 'description' in data && 'key' in data;
+}
+function isNotesArray(data) {
+    return (Array.isArray(data) &&
+        data.every((el) => {
+            return isPossibleNote(el)
+                ? typeof el.title === 'string' && typeof el.description === 'string' && typeof el.key === 'string'
+                : false;
+        }));
+}
+function createAndShowModal(titleModal, titleResButton, key) {
     if (container.getElementsByClassName('overlay')[0])
         return;
+    const parsedNotes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('notes') ?? '') : [];
+    const notes = isNotesArray(parsedNotes) ? parsedNotes : null;
+    const note = notes?.find((el) => el.key === key);
     const overlay = document.createElement('div');
+    overlay.addEventListener('click', removeModal);
     overlay.classList.add('overlay');
     const modal = document.createElement('div');
     modal.classList.add('modal');
-    modal.addEventListener('mouseenter', () => {
-        overlay.removeEventListener('click', removeModal);
-    });
-    modal.addEventListener('mouseleave', () => {
-        overlay.addEventListener('click', removeModal);
-    });
+    modal.addEventListener('click', (e) => e.stopPropagation());
     const headerModal = document.createElement('div');
     headerModal.classList.add('header-modal');
     const title = document.createElement('h2');
@@ -51,11 +61,6 @@ function createAndShowModal(titleModal, titleResButton, editButton) {
     addTitleDiv.appendChild(titleText);
     const inputTitle = document.createElement('input');
     inputTitle.classList.add('input-title');
-    if (editButton?.parentNode?.parentNode && editButton?.parentNode.parentNode instanceof Element) {
-        const title = getTargetElement('title-card', editButton?.parentNode?.parentNode.getElementsByTagName('h3'));
-        if (title)
-            inputTitle.value = title.innerText;
-    }
     inputTitle.setAttribute('type', 'text');
     addTitleDiv.appendChild(inputTitle);
     modalBody.appendChild(addTitleDiv);
@@ -67,10 +72,9 @@ function createAndShowModal(titleModal, titleResButton, editButton) {
     addDescription.appendChild(descriptionBlock);
     const textareaDescription = document.createElement('textarea');
     textareaDescription.classList.add('textarea-description');
-    if (editButton?.parentNode?.parentNode && editButton?.parentNode.parentNode instanceof Element) {
-        const description = getTargetElement('description-card', editButton?.parentNode?.parentNode.getElementsByTagName('p'));
-        if (description)
-            textareaDescription.value = description.innerText;
+    if (note) {
+        inputTitle.value = note.title;
+        textareaDescription.value = note.description;
     }
     addDescription.appendChild(textareaDescription);
     modalBody.appendChild(addDescription);
@@ -79,8 +83,8 @@ function createAndShowModal(titleModal, titleResButton, editButton) {
     addNoteButton.innerText = titleResButton;
     if (titleResButton === 'Add note')
         addNoteButton.addEventListener('click', addCardInfoToLocalStorage);
-    if (titleResButton === 'Edit' && editButton)
-        addNoteButton.addEventListener('click', () => editCard(editButton));
+    if (titleResButton === 'Edit')
+        addNoteButton.addEventListener('click', () => editCard(key ?? ''));
     modalBody.appendChild(addNoteButton);
     modal.appendChild(modalBody);
     overlay.appendChild(modal);
@@ -95,20 +99,24 @@ function removeModal() {
 function addCardInfoToLocalStorage() {
     const title = getTargetElement('input-title', document.getElementsByTagName('input'));
     const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
-    const notes = JSON.parse(localStorage.getItem('notes') ?? '');
+    const notesFromStorage = localStorage.getItem('notes');
+    const parsedNotes = notesFromStorage ? JSON.parse(notesFromStorage) : [];
+    const notes = isNotesArray(parsedNotes) ? parsedNotes : [];
     if (title?.value && description?.value) {
         const newNote = { title: title?.value, description: description?.value, key: generateKey(16) };
-        notes.push(newNote);
+        notes?.push(newNote);
     }
     localStorage.setItem('notes', JSON.stringify(notes));
-    addCards(notes);
+    if (notes)
+        addCards(notes);
     const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
     if (removeButton)
         removeModal();
 }
 addCardInfoToLocalStorage();
-function createCard() {
+function createCard(key) {
     const card = document.createElement('div');
+    card.setAttribute('data-key', key);
     card.classList.add('card', 'note');
     const mainCard = document.createElement('div');
     mainCard.classList.add('main-card');
@@ -126,63 +134,46 @@ function createCard() {
     const editButton = document.createElement('img');
     editButton.classList.add('edit-note-button');
     editButton.setAttribute('src', 'content/edit.png');
-    editButton.addEventListener('click', () => createAndShowModal('Edit note', 'Edit', editButton));
+    editButton.addEventListener('click', () => createAndShowModal('Edit note', 'Edit', key));
     footerCard.appendChild(editButton);
     const deleteButton = document.createElement('img');
     deleteButton.classList.add('delete-note-button');
     deleteButton.setAttribute('src', 'content/delete.png');
-    deleteButton.addEventListener('click', () => removeCard(deleteButton));
+    deleteButton.addEventListener('click', () => removeCard(key));
     footerCard.appendChild(deleteButton);
     card.appendChild(mainCard);
     card.appendChild(footerCard);
     return card;
 }
-function removeCard(x) {
-    if (x.parentNode?.parentNode) {
-        containerCards.removeChild(x.parentNode.parentNode);
-        if (x.parentNode.parentNode instanceof Element) {
-            const attKey = x.parentNode.parentNode.getAttribute('data-key');
-            const notes = JSON.parse(localStorage.getItem('notes') ?? '');
-            for (let i = 0; i < notes.length; i++) {
-                if (notes[i].key === attKey) {
-                    notes.splice(i, 1);
-                    break;
-                }
-            }
-            localStorage.setItem('notes', JSON.stringify(notes));
-            addCards(notes);
-        }
-    }
+function removeCard(key) {
+    const parsedNotes = JSON.parse(localStorage.getItem('notes') ?? '');
+    const notes = isNotesArray(parsedNotes) ? parsedNotes : null;
+    const updatedNotes = notes?.filter((el) => el.key !== key);
+    localStorage.setItem('notes', JSON.stringify(updatedNotes));
+    if (updatedNotes)
+        addCards(updatedNotes);
 }
-function editCard(editButton) {
-    if (editButton.parentNode?.parentNode) {
-        if (editButton.parentNode.parentNode instanceof Element) {
-            const title = getTargetElement('input-title', document.getElementsByTagName('input'));
-            const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
-            const attKey = editButton.parentNode.parentNode.getAttribute('data-key');
-            const notes = JSON.parse(localStorage.getItem('notes') ?? '');
-            for (let i = 0; i < notes.length; i++) {
-                if (notes[i].key === attKey && notes[i].title && notes[i].description && title?.value && description?.value) {
-                    notes[i].title = title?.value;
-                    notes[i].description = description?.value;
-                    break;
-                }
-            }
-            localStorage.setItem('notes', JSON.stringify(notes));
-            addCards(notes);
-            const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
-            if (removeButton)
-                removeModal();
-        }
+function editCard(key) {
+    const title = getTargetElement('input-title', document.getElementsByTagName('input'));
+    const description = getTargetElement('textarea-description', document.getElementsByTagName('textarea'));
+    const parsedNotes = JSON.parse(localStorage.getItem('notes') ?? '');
+    const notes = isNotesArray(parsedNotes) ? parsedNotes : [];
+    if (title?.value && description?.value) {
+        const updatedNotes = notes?.map((note) => note.key === key ? { ...note, title: title.value, description: description.value } : note);
+        localStorage.setItem('notes', JSON.stringify(updatedNotes));
+        if (updatedNotes)
+            addCards(updatedNotes);
     }
+    const removeButton = getTargetElement('remove-modal-button', document.getElementsByTagName('div'));
+    if (removeButton)
+        removeModal();
 }
 function addCards(notes) {
     for (let i = containerCards.children.length - 1; i > 0; i--) {
         containerCards.removeChild(containerCards.children[i]);
     }
     for (let i = 0; i < notes.length; i++) {
-        const card = createCard();
-        card.setAttribute('data-key', notes[i].key);
+        const card = createCard(notes[i].key);
         const title = getTargetElement('title-card', card.getElementsByTagName('h3'));
         const description = getTargetElement('description-card', card.getElementsByTagName('p'));
         const date = getTargetElement('date', card.getElementsByTagName('p'));
